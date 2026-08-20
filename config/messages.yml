@@ -1,4 +1,6 @@
-# All user-facing English strings. Restart after edits.
+# User-facing strings. Restart after edits.
+# Guild language is set with /config language (en or fa). Missing keys fall back to English.
+
 en:
   permission: "You do not have permission to use that command."
   cancelled: "Cancelled. No changes were made."
@@ -8,7 +10,7 @@ en:
   panel_intro: "Toggle modules for this server. Disabled modules stay quiet and skip their commands."
   module_on: "Module **{name}** is now enabled."
   module_off: "Module **{name}** is now disabled."
-  lockdown_on: "Server lockdown is active. Channels are locked and invites are paused."
+  lockdown_on: "Server lockdown is active. Channels are locked."
   lockdown_off: "Lockdown lifted. Channels were restored."
   verify_prompt: "Click **Verify** and complete the challenge to unlock the server."
   verify_ok: "You are verified. Welcome!"
@@ -18,3 +20,23 @@ en:
   setup_saved: "Setup saved."
   config_imported: "Configuration imported."
   no_module: "That module is disabled on this server. An admin can enable it with /panel."
+
+fa:
+  permission: "شما اجازه استفاده از این دستور را ندارید."
+  cancelled: "لغو شد. تغییری اعمال نشد."
+  saved: "تنظیمات ذخیره شد."
+  not_found: "چیزی پیدا نشد."
+  panel_title: "پنل کنترل Aegis"
+  panel_intro: "ماژول‌های این سرور را روشن یا خاموش کنید. ماژول خاموش دستورهایش را اجرا نمی‌کند."
+  module_on: "ماژول **{name}** روشن شد."
+  module_off: "ماژول **{name}** خاموش شد."
+  lockdown_on: "قفل اضطراری سرور فعال است. چنل‌ها قفل شدند."
+  lockdown_off: "قفل اضطراری برداشته شد."
+  verify_prompt: "روی **Verify** بزنید و کد را وارد کنید تا سرور باز شود."
+  verify_ok: "تأیید شدید. خوش آمدید!"
+  verify_fail: "تأیید ناموفق بود. دوباره تلاش کنید."
+  welcome_default: "{user} به {server} خوش آمدید!"
+  leave_default: "{user} سرور {server} را ترک کرد."
+  setup_saved: "راه‌اندازی ذخیره شد."
+  config_imported: "پیکربندی وارد شد."
+  no_module: "این ماژول در سرور خاموش است. ادمین می‌تواند با /panel روشنش کند."

@@ -1,9 +1,9 @@
 # Aegis — full-featured Discord bot
 
 Aegis is a modular `discord.py 2.x` bot combining moderation, community tooling,
-utility, tickets, giveaways, leveling, economy, fun, logging and music. It uses
-slash commands through Discord's Application Commands API, with an optional,
-per-guild legacy prefix.
+utility, tickets, giveaways, leveling, economy, fun, logging, protection, voice
+rooms and music. Slash commands are grouped so the tree stays under Discord's
+100-command cap. An optional per-guild prefix still works for `ping` / `help`.
 
 ## Quick start
 
@@ -39,12 +39,13 @@ bot/
   core/
     bot.py                intents, extension loading, error boundary, prefixes
     scheduler.py          persistent restart-safe task scheduler
+    extensions.py         cog load order
   cogs/
-    admin.py              owner-only operations and safe expression evaluator
-    configuration.py      setup wizard, language/prefix/log/welcome/config backup
-    moderation.py         cases, warnings, actions, confirmation views
-    automod.py            filters, spam checks, anti-raid and autorole/welcome
-    logging_events.py     message/member/channel/voice audit events
+    admin.py              /owner eval, reload, shutdown, blacklist, broadcast
+    configuration.py      /setup wizard plus /config group (language, logs, roles)
+    moderation.py         cases, warnings, timed actions, lock/lockdown
+    automod.py            filters, spam checks, anti-raid, autorole, welcome
+    logging_events.py     message/member/channel/voice/invite audit events
     utility.py            profiles, polls, reminders, AFK, APIs and sniping
     tickets.py            private ticket panel and transcript close flow
     giveaways.py          persistent button giveaways and rerolls
@@ -52,11 +53,16 @@ bot/
     economy.py            wallet, rewards, shop, inventory and mini-games
     fun.py                games, APIs, tags, counting and image captions
     music.py              voice queue with yt-dlp/FFmpeg controls
+    panel.py              /panel module toggles
+    protection.py         anti-nuke, anti-alt, scam links, permission audit
+    engagement.py         starboard, confessions, LFG, birthdays
+    voice_tools.py        join-to-create temporary voice rooms
   utils/
     embeds.py             consistent brand embeds
     checks.py             hierarchy and user-facing error helpers
     time.py               safe duration parsing
     ui.py                 confirmation, pagination and interactive help
+    i18n.py               English / Persian strings from messages.yml
 migrations/001_initial.sql persistent schema
 ```
 
@@ -69,11 +75,14 @@ used. SQLite is configured for WAL mode and is suitable for a small deployment.
 The `Database` interface is deliberately isolated so an async PostgreSQL adapter
 can replace it for a sharded deployment without changing cogs.
 
-Guild settings are namespaced JSON with safe defaults. `/exportconfig` and
-`/importconfig` provide backup/restore without storing secrets. Sensitive commands
+Guild settings are namespaced JSON with safe defaults. `/config export` and
+`/config import` provide backup/restore without storing secrets. Sensitive commands
 use Discord's built-in default permissions, role hierarchy checks and confirmation
 buttons where appropriate. All responses share a brand colour, timestamp and
 version footer; `/help` uses a category select menu and long lists use pagination.
+
+Disable a feature with `/panel` — matching slash commands and listeners stay quiet
+for that server.
 
 ## Operational notes
 
@@ -84,6 +93,14 @@ version footer; `/help` uses a category select menu and long lists use paginatio
   yt-dlp's search fallback; Spotify itself does not provide audio streams.
 - External commands (`weather`, `translate`, `define`, `meme`, etc.) fail softly and
   never block moderation. Set API keys only in `.env`.
-- `evalexec` is intentionally expression-only: imports, attribute access, calls and
+- `/owner eval` is intentionally expression-only: imports, attribute access, calls and
   arbitrary `exec` are blocked. Keep `OWNER_IDS` tightly controlled.
 - Never commit `.env`, database files or bot tokens. See `.env.example`.
+- Persian UI strings live in `config/messages.yml` under `fa`. Set `/config language`.
+
+## Tests
+
+```bash
+python -m pip install -r requirements.txt pytest pytest-asyncio
+python -m pytest
+```

@@ -11,10 +11,31 @@ WARNING = discord.Colour(0xFEE75C)
 DANGER = discord.Colour(0xED4245)
 
 
-def embed(title: str, description: str = "", *, colour: discord.Colour = BRAND,
-          bot_name: str = "Aegis", version: str = "1.0.0", **kwargs: Any) -> discord.Embed:
-    result = discord.Embed(title=title, description=description, colour=colour,
-                           timestamp=datetime.now(timezone.utc), **kwargs)
+def embed(
+    title: str,
+    description: str = "",
+    *,
+    colour: discord.Colour = BRAND,
+    bot_name: str | None = None,
+    version: str | None = None,
+    **kwargs: Any,
+) -> discord.Embed:
+    if bot_name is None or version is None:
+        try:
+            from bot.config import settings
+
+            bot_name = bot_name or settings.bot_name
+            version = version or settings.version
+        except Exception:
+            bot_name = bot_name or "Aegis"
+            version = version or "1.2.0"
+    result = discord.Embed(
+        title=title,
+        description=description,
+        colour=colour,
+        timestamp=datetime.now(timezone.utc),
+        **kwargs,
+    )
     result.set_footer(text=f"{bot_name} • v{version}")
     return result
 

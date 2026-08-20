@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     opened_at TEXT NOT NULL,
     closed_at TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_tickets_open ON tickets(guild_id, opener_id, closed_at);
 
 CREATE TABLE IF NOT EXISTS shop_items (
     guild_id INTEGER NOT NULL,
@@ -134,4 +135,24 @@ CREATE TABLE IF NOT EXISTS blacklist (
     reason TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,
     PRIMARY KEY (kind, target_id)
+);
+
+CREATE TABLE IF NOT EXISTS starboard_messages (
+    source_message_id INTEGER PRIMARY KEY,
+    starboard_message_id INTEGER NOT NULL,
+    channel_id INTEGER NOT NULL,
+    guild_id INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS counting_state (
+    guild_id INTEGER PRIMARY KEY,
+    current INTEGER NOT NULL DEFAULT 0,
+    last_user_id INTEGER
+);
+
+CREATE TABLE IF NOT EXISTS temp_voice (
+    channel_id INTEGER PRIMARY KEY,
+    guild_id INTEGER NOT NULL,
+    owner_id INTEGER NOT NULL,
+    created_at TEXT NOT NULL
 );

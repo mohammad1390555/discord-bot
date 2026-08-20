@@ -11,7 +11,8 @@ COPY requirements.txt pyproject.toml ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY bot ./bot
 COPY migrations ./migrations
-COPY .env.example ./
+COPY config ./config
+COPY main.py .env.example ./
 
 RUN useradd --create-home --uid 10001 bot \
     && mkdir -p /app/data \
