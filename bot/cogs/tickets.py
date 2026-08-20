@@ -8,6 +8,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from bot.utils.embeds import embed, ok
+from bot.utils.ui import ConfirmView
 
 
 class OpenTicketView(discord.ui.View):
@@ -102,7 +103,11 @@ class Tickets(commands.Cog):
         if not row:
             await interaction.response.send_message("This is not an open Aegis ticket.", ephemeral=True)
             return
-        await interaction.response.defer()
+        confirmation = ConfirmView(interaction.user.id)
+        await interaction.response.send_message(embed=embed("Close ticket?", "The channel will be deleted after a text transcript is sent to the moderation log."), view=confirmation, ephemeral=True)
+        await confirmation.wait()
+        if not confirmation.confirmed:
+            return
         lines = [f"Ticket #{row['id']} • {interaction.guild.name}", "=" * 70]
         async for message in interaction.channel.history(limit=1000, oldest_first=True):
             stamp = message.created_at.astimezone(timezone.utc).isoformat()

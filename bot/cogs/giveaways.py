@@ -10,6 +10,7 @@ from discord.ext import commands
 from bot.database import parse_iso, utcnow
 from bot.utils.embeds import embed, ok
 from bot.utils.time import human_duration, parse_duration
+from bot.utils.ui import ConfirmView
 
 
 class GiveawayView(discord.ui.View):
@@ -92,7 +93,11 @@ class Giveaways(commands.Cog):
         if not row:
             await interaction.response.send_message("Active giveaway not found.", ephemeral=True)
             return
-        await interaction.response.defer()
+        confirmation = ConfirmView(interaction.user.id)
+        await interaction.response.send_message(embed=embed("End giveaway?", f"This immediately selects winners for giveaway **#{giveaway_id}**."), view=confirmation, ephemeral=True)
+        await confirmation.wait()
+        if not confirmation.confirmed:
+            return
         await self._finish({"giveaway_id": giveaway_id})
         await interaction.followup.send(embed=ok(f"Giveaway **#{giveaway_id}** ended."), ephemeral=True)
 
