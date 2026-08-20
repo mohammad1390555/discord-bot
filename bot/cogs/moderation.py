@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Optional
 
 import discord
@@ -8,18 +9,28 @@ from discord.ext import commands
 
 from bot.utils.checks import can_bot_moderate, can_moderate
 from bot.utils.embeds import WARNING, embed, ok
+from bot.utils.modules import ModuleCog
 from bot.utils.time import human_duration, parse_duration
 from bot.utils.ui import ConfirmView, Paginator
 
 
-class Moderation(commands.Cog):
+class Moderation(ModuleCog):
     """Permission-aware moderation with persistent case IDs and timed actions."""
+
+    module_name = "moderation"
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+
+    async def cog_load(self) -> None:
         self.bot.scheduler.register("unmute", self._expire_timeout)
         self.bot.scheduler.register("unban", self._expire_ban)
 
     async def _confirm(self, interaction: discord.Interaction, text: str) -> bool:
+        if not self.bot.settings.get("features.confirmation_for_destructive", True):
+            if not interaction.response.is_done():
+                await interaction.response.defer(ephemeral=True)
+            return True
         view = ConfirmView(interaction.user.id)
         await interaction.response.send_message(embed=embed("Please confirm", text, colour=WARNING), view=view, ephemeral=True)
         await view.wait()
@@ -123,10 +134,10 @@ class Moderation(commands.Cog):
         case = await self.bot.db.add_case(interaction.guild_id, member.id, interaction.user.id, "kick", reason)
         await interaction.followup.send(embed=ok(f"{member} was kicked. Case **#{case}**."))
 
-    @app_commands.command(name="mutetimeout", description="Apply a Discord timeout to a member")
+    @app_commands.command(name="timeout", description="Apply a Discord timeout to a member")
     @app_commands.default_permissions(moderate_members=True)
     @app_commands.guild_only()
-    async def mutetimeout(self, interaction: discord.Interaction, member: discord.Member, duration: str, reason: str = "No reason provided") -> None:
+    async def timeout_member(self, interaction: discord.Interaction, member: discord.Member, duration: str, reason: str = "No reason provided") -> None:
         can_moderate(interaction.user, member)  # type: ignore[arg-type]
         can_bot_moderate(interaction.guild, member)  # type: ignore[arg-type]
         try:
@@ -185,44 +196,75 @@ class Moderation(commands.Cog):
             return
         pages = []
         for offset in range(0, len(rows), 10):
-            page = rows[offset:offset + 10]
-            description = "\n".join(f"**#{row['id']}** <t:{int(__import__('datetime').datetime.fromisoformat(row['created_at']).timestamp())}:R> — {row['reason']}" for row in page)
+            page = rows[offset : offset + 10]
+            description = "\n".join(
+                f"**#{row['id']}** <t:{int(datetime.fromisoformat(row['created_at']).timestamp())}:R> — {row['reason']}"
+                for row in page
+            )
             pages.append(embed(f"Warnings for {member}", description))
         view = Paginator(interaction.user.id, pages)
-        await interaction.response.send_message(embed=pages[0], view=view)
-        view.message = await interaction.original_response()
+        await view.send(interaction)
 
-    @app_commands.command(name="purgeclear", description="Delete recent messages with optional filters")
+    @app_commands.command(name="purge", description="Delete recent messages with optional filters")
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.guild_only()
-    async def purgeclear(self, interaction: discord.Interaction, amount: app_commands.Range[int, 1, 100], member: Optional[discord.Member] = None, bots_only: bool = False, embeds_only: bool = False, contains: Optional[str] = None) -> None:
+    async def purge(
+        self,
+        interaction: discord.Interaction,
+        amount: app_commands.Range[int, 1, 100],
+        member: Optional[discord.Member] = None,
+        bots_only: bool = False,
+        embeds_only: bool = False,
+        contains: Optional[str] = None,
+    ) -> None:
         if not isinstance(interaction.channel, discord.TextChannel):
             await interaction.response.send_message("This command only works in text channels.", ephemeral=True)
             return
         if not await self._confirm(interaction, f"Delete up to **{amount}** matching messages in {interaction.channel.mention}?"):
             return
+
         def check(message: discord.Message) -> bool:
-            return (not member or message.author.id == member.id) and (not bots_only or message.author.bot) and (not embeds_only or bool(message.embeds)) and (not contains or contains.lower() in message.content.lower())
+            return (
+                (not member or message.author.id == member.id)
+                and (not bots_only or message.author.bot)
+                and (not embeds_only or bool(message.embeds))
+                and (not contains or contains.lower() in message.content.lower())
+            )
+
         deleted = await interaction.channel.purge(limit=amount, check=check, reason=f"Purge by {interaction.user}")
         await interaction.followup.send(embed=ok(f"Deleted **{len(deleted)}** messages."), ephemeral=True)
 
-    @app_commands.command(name="lockunlock", description="Lock or unlock the current channel")
+    @app_commands.command(name="lock", description="Lock the current channel")
     @app_commands.default_permissions(manage_channels=True)
     @app_commands.guild_only()
-    @app_commands.choices(action=[app_commands.Choice(name="Lock", value="lock"), app_commands.Choice(name="Unlock", value="unlock")])
-    async def lockunlock(self, interaction: discord.Interaction, action: app_commands.Choice[str]) -> None:
+    async def lock(self, interaction: discord.Interaction) -> None:
         channel = interaction.channel
-        if not isinstance(channel, discord.TextChannel):
+        if not isinstance(channel, discord.TextChannel) or not interaction.guild:
             await interaction.response.send_message("This command only works in text channels.", ephemeral=True)
             return
-        locked = action.value == "lock"
-        await channel.set_permissions(interaction.guild.default_role, send_messages=not locked, reason=f"Channel {action.value} by {interaction.user}")
-        await interaction.response.send_message(embed=ok(f"{channel.mention} is now {'locked' if locked else 'unlocked'}."))
+        await channel.set_permissions(interaction.guild.default_role, send_messages=False, reason=f"Channel lock by {interaction.user}")
+        await interaction.response.send_message(embed=ok(f"{channel.mention} is now locked."))
+
+    @app_commands.command(name="unlock", description="Unlock the current channel")
+    @app_commands.default_permissions(manage_channels=True)
+    @app_commands.guild_only()
+    async def unlock(self, interaction: discord.Interaction) -> None:
+        channel = interaction.channel
+        if not isinstance(channel, discord.TextChannel) or not interaction.guild:
+            await interaction.response.send_message("This command only works in text channels.", ephemeral=True)
+            return
+        await channel.set_permissions(interaction.guild.default_role, send_messages=True, reason=f"Channel unlock by {interaction.user}")
+        await interaction.response.send_message(embed=ok(f"{channel.mention} is now unlocked."))
 
     @app_commands.command(name="lockdown", description="Lock or unlock every text channel in the server")
     @app_commands.default_permissions(manage_channels=True)
     @app_commands.guild_only()
-    @app_commands.choices(action=[app_commands.Choice(name="Lock all channels", value="lock"), app_commands.Choice(name="Unlock all channels", value="unlock")])
+    @app_commands.choices(
+        action=[
+            app_commands.Choice(name="Lock all channels", value="lock"),
+            app_commands.Choice(name="Unlock all channels", value="unlock"),
+        ]
+    )
     async def lockdown(self, interaction: discord.Interaction, action: app_commands.Choice[str]) -> None:
         locked = action.value == "lock"
         if not await self._confirm(interaction, f"{action.name} across **all text channels**? This can disrupt the whole server."):
@@ -230,10 +272,15 @@ class Moderation(commands.Cog):
         changed = 0
         for channel in interaction.guild.text_channels:  # type: ignore[union-attr]
             try:
-                await channel.set_permissions(interaction.guild.default_role, send_messages=not locked, reason=f"Server lockdown by {interaction.user}")  # type: ignore[union-attr]
+                await channel.set_permissions(
+                    interaction.guild.default_role,  # type: ignore[union-attr]
+                    send_messages=False if locked else None,
+                    reason=f"Server lockdown by {interaction.user}",
+                )
                 changed += 1
             except discord.HTTPException:
                 continue
+        await self.bot.db.set_settings(interaction.guild_id, lockdown=locked)
         await interaction.followup.send(embed=ok(f"{action.name} in **{changed}** channels."))
 
     @app_commands.command(name="slowmode", description="Set the current channel's slowmode")
@@ -243,7 +290,7 @@ class Moderation(commands.Cog):
         if not hasattr(interaction.channel, "edit"):
             await interaction.response.send_message("This is not a configurable channel.", ephemeral=True)
             return
-        await interaction.channel.edit(slowmode_delay=seconds, reason=f"Slowmode by {interaction.user}")
+        await interaction.channel.edit(slowmode_delay=seconds, reason=f"Slowmode by {interaction.user}")  # type: ignore[union-attr]
         await interaction.response.send_message(embed=ok(f"Slowmode set to **{seconds}s**."))
 
     @app_commands.command(name="nickname", description="Set or reset a member's server nickname")
@@ -264,11 +311,13 @@ class Moderation(commands.Cog):
             return
         pages = []
         for offset in range(0, len(rows), 8):
-            description = "\n".join(f"**#{r['id']} {r['action'].upper()}** • <t:{int(__import__('datetime').datetime.fromisoformat(r['created_at']).timestamp())}:f>\n{r['reason']}" for r in rows[offset:offset + 8])
+            description = "\n".join(
+                f"**#{r['id']} {r['action'].upper()}** • <t:{int(datetime.fromisoformat(r['created_at']).timestamp())}:f>\n{r['reason']}"
+                for r in rows[offset : offset + 8]
+            )
             pages.append(embed(f"Moderation history — {member}", description))
         view = Paginator(interaction.user.id, pages)
-        await interaction.response.send_message(embed=pages[0], view=view)
-        view.message = await interaction.original_response()
+        await view.send(interaction)
 
 
 async def setup(bot: commands.Bot) -> None:

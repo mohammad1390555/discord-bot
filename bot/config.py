@@ -45,7 +45,7 @@ class Settings:
             prefix=os.getenv("DEFAULT_PREFIX") or bot_block.get("default_prefix") or "!",
             log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
             bot_name=os.getenv("BOT_NAME") or bot_block.get("name") or "Aegis",
-            version=os.getenv("BOT_VERSION") or str(bot_block.get("version") or "1.1.0"),
+            version=os.getenv("BOT_VERSION") or str(bot_block.get("version") or "1.2.0"),
             weather_api_key=os.getenv("OPENWEATHER_API_KEY") or None,
             translate_api_url=os.getenv("TRANSLATE_API_URL") or None,
             yaml=yaml_cfg,
