@@ -1,0 +1,73 @@
+# Aegis bot configuration (non-secret). Secrets stay in .env
+# Edit this file, then restart the bot.
+
+bot:
+  name: Aegis
+  version: "1.1.0"
+  default_prefix: "!"
+  default_language: en
+  activity: "/panel • all-in-one server tools"
+  status: online  # online, idle, dnd, invisible
+  embed_color: 0x5865F2
+  sync_on_start: true
+
+modules:
+  # Per-server defaults; admins can toggle with /panel
+  moderation: true
+  automod: true
+  logging: true
+  tickets: true
+  giveaways: true
+  leveling: true
+  economy: true
+  fun: true
+  music: true
+  utility: true
+  protection: true
+  engagement: true
+  voice: true
+  onboarding: true
+
+protection:
+  anti_nuke: true
+  anti_nuke_threshold: 5
+  anti_nuke_window_seconds: 10
+  anti_alt_days: 7
+  anti_alt_action: restrict  # restrict, kick, none
+  dehoist: true
+  dehoist_characters: "!\"#$%&'*+,-./"
+  scam_links: true
+  webhook_spam: true
+
+logging:
+  categories:
+    - general
+    - moderation
+    - messages
+    - members
+    - voice
+    - invites
+    - server
+
+starboard:
+  emoji: "⭐"
+  threshold: 3
+
+voice:
+  join_to_create: false
+  temp_channel_name: "{user}'s channel"
+
+economy:
+  daily_amount: 250
+  weekly_amount: 1500
+  work_min: 40
+  work_max: 120
+
+leveling:
+  xp_min: 8
+  xp_max: 15
+  cooldown_seconds: 60
+
+features:
+  allow_prefix_commands: true
+  confirmation_for_destructive: true

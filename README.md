@@ -13,7 +13,8 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 cp .env.example .env
 # edit .env and set DISCORD_TOKEN and OWNER_IDS
-python -m bot
+# optional: edit config/config.yml and config/messages.yml
+python main.py
 ```
 
 Or build the included image (FFmpeg is installed for music):
