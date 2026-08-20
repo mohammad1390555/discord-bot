@@ -27,8 +27,12 @@ def error(description: str, **kwargs: Any) -> discord.Embed:
     return embed("Something went wrong", description, colour=DANGER, **kwargs)
 
 
-def info(description: str, **kwargs: Any) -> discord.Embed:
-    return embed("Aegis", description, **kwargs)
+def info(description: str, title: str = "Aegis", **kwargs: Any) -> discord.Embed:
+    return embed(title, description, **kwargs)
+
+
+def warning(description: str, **kwargs: Any) -> discord.Embed:
+    return embed("Notice", description, colour=WARNING, **kwargs)
 
 
 def shorten(text: str, limit: int = 1024) -> str:

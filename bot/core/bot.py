@@ -40,6 +40,7 @@ class AegisBot(commands.Bot):
         intents.message_content = True
         intents.presences = False
         intents.voice_states = True
+        self.settings = settings
         super().__init__(
             command_prefix=self.prefix_for,
             tree_cls=AegisCommandTree,
@@ -47,9 +48,8 @@ class AegisBot(commands.Bot):
             help_command=None,
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=True),
-            activity=discord.Game(name="/help • protection & community"),
+            activity=discord.Game(name=settings.get("bot.activity", "/panel • all-in-one server tools")),
         )
-        self.settings = settings
         self.db = Database(settings.database_url)
         self.scheduler = PersistentScheduler(self.db)
         self.started_at = time.monotonic()
@@ -86,6 +86,10 @@ class AegisBot(commands.Bot):
             "bot.cogs.economy",
             "bot.cogs.fun",
             "bot.cogs.music",
+            "bot.cogs.panel",
+            "bot.cogs.protection",
+            "bot.cogs.engagement",
+            "bot.cogs.voice_tools",
         ]
         for extension in extensions:
             try:

@@ -12,6 +12,7 @@ dependencies = [
   "PyNaCl>=1.5,<2",
   "yt-dlp>=2025.1",
   "qrcode[pil]>=8.0,<9",
+  "PyYAML>=6.0,<7",
 ]
 
 [project.scripts]

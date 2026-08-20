@@ -27,6 +27,25 @@ DEFAULT_GUILD_SETTINGS: dict[str, Any] = {
     "automod": {"enabled": False, "banned_words": [], "max_mentions": 5, "max_caps": 0.8},
     "dj_role_id": None,
     "counting_channel_id": None,
+    "modules": {
+        "moderation": True,
+        "automod": True,
+        "logging": True,
+        "tickets": True,
+        "giveaways": True,
+        "leveling": True,
+        "economy": True,
+        "fun": True,
+        "music": True,
+        "utility": True,
+        "protection": True,
+        "engagement": True,
+        "voice": True,
+        "onboarding": True,
+    },
+    "starboard": {"channel_id": None, "threshold": 3, "emoji": "⭐"},
+    "join_to_create_channel_id": None,
+    "lockdown": False,
 }
 
 
