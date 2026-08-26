@@ -79,6 +79,214 @@ class TriviaView(discord.ui.View):
         return callback
 
 
+class CoinFlipView(discord.ui.View):
+    """Heads/tails game with a real coin-flip feel and double-or-nothing loop."""
+
+    def __init__(self, author_id: int, cog: "Fun") -> None:
+        super().__init__(timeout=60)
+        self.author_id = author_id
+        self.cog = cog
+        self.streak = 0
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "This coin belongs to another player.", ephemeral=True)
+            return False
+        return True
+
+    async def _flip(self, interaction: discord.Interaction, choice: str) -> None:
+        result = random.choice(["heads", "tails"])
+        won = result == choice
+        if won:
+            self.streak += 1
+            colour, title = 0x57F287, f"You won! Streak: {self.streak}"
+        else:
+            self.streak = 0
+            colour, title = 0xED4245, "You lost."
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = False
+        await interaction.response.edit_message(
+            embed=embed(
+                f"\U0001FA99 {title}",
+                f"The coin landed on **{result}**. You picked **{choice}**.\n"
+                "Flip again or stop.",
+                colour=colour),
+            view=self)
+
+    @discord.ui.button(label="Heads", emoji="\U0001F44D")
+    async def heads(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        await self._flip(interaction, "heads")
+
+    @discord.ui.button(label="Tails", emoji="\U0001F44E")
+    async def tails(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        await self._flip(interaction, "tails")
+
+    @discord.ui.button(label="Stop", emoji="\U0001F6D1", style=discord.ButtonStyle.danger)
+    async def stop_game(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+        await interaction.response.edit_message(
+            embed=embed("Coin flip finished",
+                        f"Final win streak: **{self.streak}**."),
+            view=self)
+        self.stop()
+
+
+class DuelView(discord.ui.View):
+    """Two-player RPS where each player picks privately via their own buttons."""
+
+    MOVES = {"rock": "\U0001FAA8", "paper": "\U0001F4C4", "scissors": "\u2702\uFE0F"}
+    BEATS = {("rock", "scissors"), ("paper", "rock"), ("scissors", "paper")}
+
+    def __init__(self, player1: int, player2: int) -> None:
+        super().__init__(timeout=120)
+        self.players = {player1: None, player2: None}
+        self.p1, self.p2 = player1, player2
+
+    def _embed_state(self) -> discord.Embed:
+        p1_done = self.players[self.p1] is not None
+        p2_done = self.players[self.p2] is not None
+        return embed(
+            "\u2694\uFE0F RPS Duel",
+            f"<@{self.p1}>: {'locked in' if p1_done else 'choosing...'}\n"
+            f"<@{self.p2}>: {'locked in' if p2_done else 'choosing...'}\n\n"
+            "Each player presses a button - choices stay hidden until both lock in.")
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id not in self.players:
+            await interaction.response.send_message(
+                "This duel is not yours.", ephemeral=True)
+            return False
+        if self.players[interaction.user.id] is not None:
+            await interaction.response.send_message(
+                "You already locked your move.", ephemeral=True)
+            return False
+        return True
+
+    async def _pick(self, interaction: discord.Interaction, move: str) -> None:
+        self.players[interaction.user.id] = move
+        if any(v is None for v in self.players.values()):
+            await interaction.response.edit_message(embed=self._embed_state())
+            return
+        m1, m2 = self.players[self.p1], self.players[self.p2]
+        if m1 == m2:
+            outcome = "It's a draw!"
+            colour = 0xFEE75C
+        elif (m1, m2) in self.BEATS:
+            outcome = f"<@{self.p1}> wins!"
+            colour = 0x57F287
+        else:
+            outcome = f"<@{self.p2}> wins!"
+            colour = 0x57F287
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+        await interaction.response.edit_message(
+            embed=embed(
+                "\u2694\uFE0F Duel result",
+                f"<@{self.p1}> {self.MOVES[m1]}  vs  {self.MOVES[m2]} <@{self.p2}>\n\n"
+                f"**{outcome}**",
+                colour=colour),
+            view=self)
+        self.stop()
+
+    @discord.ui.button(label="Rock", emoji="\U0001FAA8")
+    async def rock(self, i, _): await self._pick(i, "rock")
+
+    @discord.ui.button(label="Paper", emoji="\U0001F4C4")
+    async def paper(self, i, _): await self._pick(i, "paper")
+
+    @discord.ui.button(label="Scissors", emoji="\u2702\uFE0F")
+    async def scissors(self, i, _): await self._pick(i, "scissors")
+
+
+class GuessNumberModal(discord.ui.Modal, title="Make your guess"):
+    value = discord.ui.TextInput(
+        label="Your guess (1-100)", max_length=3,
+        placeholder="e.g. 42")
+
+    def __init__(self, game: "GuessGameView") -> None:
+        super().__init__()
+        self.game = game
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        raw = str(self.value).strip()
+        if not raw.isdigit():
+            await interaction.response.send_message("Enter a whole number.", ephemeral=True)
+            return
+        await self.game.attempt(interaction, int(raw))
+
+
+class GuessGameView(discord.ui.View):
+    def __init__(self, author_id: int) -> None:
+        super().__init__(timeout=180)
+        self.author_id = author_id
+        self.secret = random.randint(1, 100)
+        self.tries_left = 7
+        self.history: list[str] = []
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author_id:
+            await interaction.response.send_message(
+                "This game belongs to another player.", ephemeral=True)
+            return False
+        return True
+
+    async def attempt(self, interaction: discord.Interaction, number: int) -> None:
+        if number == self.secret:
+            for child in self.children:
+                if isinstance(child, discord.ui.Button):
+                    child.disabled = True
+            await interaction.response.edit_message(
+                embed=embed(
+                    "\U0001F389 You got it!",
+                    f"The number was **{self.secret}** - solved in "
+                    f"{7 - self.tries_left + 1} tries.",
+                    colour=0x57F287),
+                view=self)
+            self.stop()
+            return
+        self.tries_left -= 1
+        hint = "higher" if number < self.secret else "lower"
+        arrow = "\u2b06\uFE0F" if hint == "higher" else "\u2b07\uFE0F"
+        self.history.append(f"`{number}` {arrow}")
+        shown = " ".join(self.history[-10:])
+        if self.tries_left <= 0:
+            for child in self.children:
+                if isinstance(child, discord.ui.Button):
+                    child.disabled = True
+            await interaction.response.edit_message(
+                embed=embed(
+                    "Out of tries",
+                    f"The number was **{self.secret}**.\nYour guesses: {shown}",
+                    colour=0xED4245),
+                view=self)
+            self.stop()
+            return
+        await interaction.response.edit_message(
+            embed=embed(
+                "Number guessing game",
+                f"{arrow} Try **{hint}** than `{number}`.\n"
+                f"Tries left: **{self.tries_left}**\n\n{shown}"))
+
+    @discord.ui.button(label="Guess", emoji="\U0001F50D", style=discord.ButtonStyle.primary)
+    async def open_guess(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        await interaction.response.send_modal(GuessNumberModal(self))
+
+    @discord.ui.button(label="Give up", emoji="\U0001F3F3\uFE0F", style=discord.ButtonStyle.danger)
+    async def give_up(self, interaction: discord.Interaction, _: discord.ui.Button) -> None:
+        for child in self.children:
+            if isinstance(child, discord.ui.Button):
+                child.disabled = True
+        await interaction.response.edit_message(
+            embed=embed("Game over", f"You gave up. The number was **{self.secret}**."),
+            view=self)
+        self.stop()
+
+
 async def tag_name_autocomplete(interaction: discord.Interaction, current: str) -> list[app_commands.Choice[str]]:
     if not interaction.guild_id:
         return []
@@ -175,6 +383,51 @@ class Fun(ModuleCog):
     async def rps(self, interaction: discord.Interaction) -> None:
         await interaction.response.send_message(
             embed=embed("Rock Paper Scissors", "Choose your move."), view=RPSView(interaction.user.id)
+        )
+
+    @app_commands.command(name="streakflip", description="Heads or tails - build a win streak")
+    async def coinflip(self, interaction: discord.Interaction) -> None:
+        if not isinstance(interaction.user, discord.Member):
+            return
+        economy = self.bot.get_cog("Economy")
+        if economy is None or not await self._module_active("economy", interaction.guild_id):
+            await interaction.response.send_message(
+                embed=error("The economy module is disabled, so there is nothing to bet."),
+                ephemeral=True)
+            return
+        view = CoinFlipView(interaction.user.id, self)
+        await interaction.response.send_message(
+            embed=embed("Coin flip", "Choose heads or tails to play."),
+            view=view)
+
+    async def _module_active(self, module: str, guild_id: int | None) -> bool:
+        if guild_id is None:
+            return False
+        return await module_enabled(self.bot, guild_id, module)
+
+    @app_commands.command(name="duel", description="Challenge another member to rock paper scissors")
+    async def duel(self, interaction: discord.Interaction, opponent: discord.Member) -> None:
+        if opponent.bot or opponent.id == interaction.user.id:
+            await interaction.response.send_message("Pick a different human opponent.", ephemeral=True)
+            return
+        view = DuelView(interaction.user.id, opponent.id)
+        await interaction.response.send_message(
+            embed=embed(
+                "Duel started",
+                f"{interaction.user.mention} challenges {opponent.mention} to "
+                "rock paper scissors! Both players pick in private."),
+            view=view)
+
+    @app_commands.command(name="guess", description="Guess the number between 1 and 100 in 7 tries")
+    async def guess(self, interaction: discord.Interaction) -> None:
+        game = GuessGameView(interaction.user.id)
+        await interaction.response.send_message(
+            embed=embed(
+                "Number guessing game",
+                "I picked a number between **1** and **100**.\n"
+                "Press **Guess** and type your number. You have **7** tries.",
+            ),
+            view=game,
         )
 
     @app_commands.command(name="ship", description="Calculate a playful compatibility score")

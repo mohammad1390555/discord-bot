@@ -103,6 +103,18 @@ class Leveling(ModuleCog):
             f"Server rank: **#{(rank_row or {'rank': 0})['rank'] + 1}**",
         )
         result.set_thumbnail(url=member.display_avatar.url)
+        # Next reward preview
+        settings = await self.bot.db.get_guild(interaction.guild_id)
+        rewards = (settings["settings"].get("leveling", {}).get("rewards", {})) or {}
+        upcoming = sorted((int(lvl) for lvl in rewards if int(lvl) > level))[:1]
+        if upcoming:
+            reward_role = interaction.guild.get_role(rewards[str(upcoming[0])])
+            if reward_role:
+                result.add_field(
+                    name="Next role reward",
+                    value=f"{reward_role.mention} at level **{upcoming[0]}** "
+                          f"({max(0, self.next_level_xp(level) - xp):,} XP to go)",
+                    inline=False)
         await interaction.response.send_message(embed=result)
 
     @app_commands.command(name="leaderboard", description="View the server XP leaderboard")
