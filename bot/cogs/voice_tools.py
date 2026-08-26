@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -143,6 +145,7 @@ class VoiceTools(ModuleCog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self._stay_tasks: dict[int, asyncio.Task] = {}
 
     async def cog_load(self) -> None:
         # Drop records for channels that vanished while the bot was offline.
@@ -152,6 +155,104 @@ class VoiceTools(ModuleCog):
                 await self.bot.db.execute("DELETE FROM temp_voice WHERE channel_id=?",
                                           (row["channel_id"],))
         self.bot.add_view(TempVCControlView(self))
+
+    # ------------------------------------------------------------------
+    # /voice - keep the bot sitting in a chosen voice channel
+    # ------------------------------------------------------------------
+
+    @app_commands.command(name="voice",
+                          description="Make the bot join and stay in a voice channel")
+    @app_commands.default_permissions(manage_channels=True)
+    @app_commands.guild_only()
+    @app_commands.describe(
+        channel="The voice channel the bot should sit in",
+        action="Join or leave")
+    @app_commands.choices(action=[
+        app_commands.Choice(name="Join and stay", value="join"),
+        app_commands.Choice(name="Leave", value="leave"),
+    ])
+    async def voice(self, interaction: discord.Interaction,
+                    channel: discord.VoiceChannel | None = None,
+                    action: app_commands.Choice[str] | None = None) -> None:
+        guild = interaction.guild
+        if guild is None:
+            return
+        mode = action.value if action else "join"
+
+        if mode == "leave":
+            await self._stop_stay(guild.id)
+            vc = guild.voice_client
+            if vc and vc.is_connected():
+                await vc.disconnect(force=False)
+                await interaction.response.send_message(embed=ok("Left the voice channel."))
+            else:
+                await interaction.response.send_message(
+                    embed=error("I am not in a voice channel."), ephemeral=True)
+            return
+
+        if channel is None:
+            await interaction.response.send_message(
+                "Pick a voice channel to join.", ephemeral=True)
+            return
+        perms = channel.permissions_for(guild.me)
+        if not (perms.connect and perms.view_channel):
+            await interaction.response.send_message(
+                embed=error(f"I lack **Connect/View** permission for {channel.mention}."),
+                ephemeral=True)
+            return
+
+        await interaction.response.defer()
+        await self._stop_stay(guild.id)  # replace any previous stay loop
+        try:
+            vc = await channel.connect(self_deaf=True)
+        except discord.ClientException:
+            vc = guild.voice_client  # already connected somewhere; move instead
+            if vc is not None:
+                await vc.move_to(channel)
+        except discord.HTTPException:
+            await interaction.followup.send(embed=error("Could not join that channel."))
+            return
+        self._start_stay(guild.id, channel.id)
+        status = embed(
+            "\U0001F50A Voice presence enabled",
+            f"I will stay connected to {channel.mention} and do nothing.\n"
+            "Use `/voice action:Leave` to remove me.",
+            colour=BRAND)
+        await interaction.followup.send(embed=status)
+
+    def _start_stay(self, guild_id: int, channel_id: int) -> None:
+        """Background watchdog: silently re-joins if disconnected or moved."""
+        async def _watch() -> None:
+            await asyncio.sleep(5)
+            while True:
+                guild = self.bot.get_guild(guild_id)
+                if guild is None:
+                    return
+                vc = guild.voice_client
+                target = guild.get_channel(channel_id)
+                if target is None or not isinstance(target, discord.VoiceChannel):
+                    return  # channel deleted; stop watching
+                try:
+                    if vc is None or not vc.is_connected():
+                        await target.connect(self_deaf=True, timeout=30.0)
+                    elif vc.channel and vc.channel.id != channel_id:
+                        await vc.move_to(target)
+                except (discord.HTTPException, asyncio.TimeoutError):
+                    pass  # transient; retry next tick
+                await asyncio.sleep(20)
+
+        task = asyncio.create_task(_watch())
+        self._stay_tasks[guild_id] = task
+
+    async def _stop_stay(self, guild_id: int) -> None:
+        task = self._stay_tasks.pop(guild_id, None)
+        if task and not task.done():
+            task.cancel()
+
+    async def cog_unload(self) -> None:  # type: ignore[override]
+        for task in self._stay_tasks.values():
+            task.cancel()
+        self._stay_tasks.clear()
 
     @app_commands.command(name="jointocreate",
                           description="Set the Join-to-Create voice channel")
