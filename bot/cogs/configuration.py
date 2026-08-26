@@ -9,8 +9,22 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from bot.utils.embeds import info, ok
+from bot.utils.embeds import BRAND, error, info, ok
 from bot.utils.i18n import text as localized
+
+STATUS_MAP = {
+    "online": discord.Status.online,
+    "idle": discord.Status.idle,
+    "dnd": discord.Status.dnd,
+    "invisible": discord.Status.invisible,
+}
+
+ACTIVITY_MAP = {
+    "playing": discord.ActivityType.playing,
+    "listening": discord.ActivityType.listening,
+    "watching": discord.ActivityType.watching,
+    "competing": discord.ActivityType.competing,
+}
 
 
 class VerifyModal(discord.ui.Modal, title="Verification"):
@@ -424,6 +438,89 @@ class Configuration(commands.Cog):
             await interaction.response.send_message("That is not a valid Aegis configuration export.", ephemeral=True)
             return
         await interaction.response.send_message(embed=ok("Configuration imported."), ephemeral=True)
+
+    # ------------------------------------------------------------------
+    # Owner-only live bot presence configuration
+    # ------------------------------------------------------------------
+
+    botconfig = app_commands.Group(
+        name="botconfig",
+        description="Owner-only live bot presence settings",
+        default_permissions=discord.Permissions(administrator=True),
+    )
+
+    async def _owner_guard(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id not in self.bot.settings.owner_ids:
+            await interaction.response.send_message(
+                embed=error("Only the bot owner can change live bot settings."),
+                ephemeral=True)
+            return False
+        return True
+
+    @botconfig.command(name="status", description="Change the bot's presence status")
+    @app_commands.choices(status=[
+        app_commands.Choice(name="\U0001F7E2 Online", value="online"),
+        app_commands.Choice(name="\U0001F7E1 Idle", value="idle"),
+        app_commands.Choice(name="\U0001F534 Do Not Disturb", value="dnd"),
+        app_commands.Choice(name="\u26AB Invisible", value="invisible"),
+    ])
+    async def bot_status(self, interaction: discord.Interaction,
+                         status: app_commands.Choice[str]) -> None:
+        if not await self._owner_guard(interaction):
+            return
+        chosen = STATUS_MAP.get(status.value, discord.Status.online)
+        await self.bot.change_presence(status=chosen, activity=self.bot.activity)
+        self.bot.settings.yaml.setdefault("bot", {})["status"] = status.value
+        await interaction.response.send_message(
+            embed=ok(f"Status set to **{status.name}**."), ephemeral=True)
+
+    @botconfig.command(name="activity", description="Change the bot's activity text and type")
+    @app_commands.describe(kind="Activity type", text="Activity text (e.g. /panel • tools)",
+                           stream_url="Twitch URL, only needed for streaming")
+    @app_commands.choices(kind=[
+        app_commands.Choice(name="Playing", value="playing"),
+        app_commands.Choice(name="Listening", value="listening"),
+        app_commands.Choice(name="Watching", value="watching"),
+        app_commands.Choice(name="Competing", value="competing"),
+        app_commands.Choice(name="Streaming", value="streaming"),
+    ])
+    async def bot_activity(self, interaction: discord.Interaction,
+                           kind: app_commands.Choice[str], text: str,
+                           stream_url: str | None = None) -> None:
+        if not await self._owner_guard(interaction):
+            return
+        if kind.value == "streaming":
+            if not stream_url or not stream_url.startswith("https://twitch.tv/"):
+                await interaction.response.send_message(
+                    embed=error("Streaming needs a Twitch URL like https://twitch.tv/yourname"),
+                    ephemeral=True)
+                return
+            activity = discord.Streaming(name=text[:128], url=stream_url)
+        else:
+            chosen = ACTIVITY_MAP.get(kind.value, discord.ActivityType.playing)
+            activity = discord.Activity(type=chosen, name=text[:128])
+        status = self.bot.status or discord.Status.online
+        await self.bot.change_presence(status=status, activity=activity)
+        yaml_bot = self.bot.settings.yaml.setdefault("bot", {})
+        yaml_bot["activity"] = text
+        yaml_bot["activity_type"] = kind.value
+        await interaction.response.send_message(
+            embed=ok(f"Activity updated to **{kind.value} {text}**."), ephemeral=True)
+
+    @botconfig.command(name="show", description="Show the current live bot presence")
+    async def bot_show(self, interaction: discord.Interaction) -> None:
+        if not await self._owner_guard(interaction):
+            return
+        activity = self.bot.activity
+        activity_text = getattr(activity, "name", None) or "-"
+        info_panel = embed(
+            "\u2699\uFE0F Live bot presence",
+            f"**Status:** {str(self.bot.status).replace('Status.', '')}\n"
+            f"**Activity:** {activity_text}\n"
+            f"**Guilds:** {len(self.bot.guilds)}\n"
+            f"**Latency:** {round(self.bot.latency * 1000)} ms",
+            colour=BRAND)
+        await interaction.response.send_message(embed=info_panel, ephemeral=True)
 
 
 async def setup(bot: commands.Bot) -> None:
