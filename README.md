@@ -1,11 +1,165 @@
-# Aegis — full-featured Discord bot
+<div align="center">
 
-Aegis is a modular `discord.py 2.x` bot combining moderation, community tooling,
-utility, tickets, giveaways, leveling, economy, fun, logging, protection, voice
-rooms and music. Slash commands are grouped so the tree stays under Discord's
-100-command cap. An optional per-guild prefix still works for `ping` / `help`.
+# 🛡️ Aegis — ربات دیسکورد همه‌کاره
 
-## Quick start
+**نسخه فارسی** 🇮🇷 • [English](#english-version) 🇬🇧
+
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![discord.py](https://img.shields.io/badge/discord.py-2.x-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-19%20passed-3DDC84?style=for-the-badge&logo=pytest&logoColor=white)
+
+</div>
+
+---
+
+## ✨ معرفی
+
+ایجیس یک بات دیسکورد **ماژولار و حرفه‌ای** با ۱۴ ماژول کامل است — از مدیریت سرور و تیکت پشتیبانی تا اقتصاد، لِوِلینگ، موزیک و بازی‌های تعاملی. همه‌چیز با دکمه و منوی تعاملی کار می‌کند.
+
+## 🧩 ماژول‌ها
+
+### ⚖️ مدیریت (Moderation)
+- 🔨 بن، کیک، میوت و اخطار با شناسه کیس
+- 📋 تاریخچه کامل موارد + پاکسازی پیام
+
+### 🤖 خودکار (AutoMod)
+- 🚫 فیلتر کلمات و لینک‌ها
+- 🛡️ ضد اسپم خودکار
+
+### 🎫 تیکت پشتیبانی
+- 🎫 پنل زیبا با منوی موضوع + دکمه‌های باز کردن سریع
+- 🔴 سیستم اولویت (سبز تا قرمز)
+- 🤝 دکمه‌های Claim / Lock / Unlock
+- 📄 ترنسکریپت خودکار در لاگ مدیریتی
+- ⭐ امتیازدهی ستاره‌ای پس از بستن تیکت
+- 📊 آمار کامل با `/ticket stats`
+
+### 🎉 قرعه‌کشی
+- 🎁 ورود و خروج با یک دکمه
+- 💾 بعد از ری‌استارت هم ادامه پیدا می‌کند
+- 👑 محدودیت نقش برای شرکت
+
+### 📈 لِوِلینگ
+- ⭐ XP خودکار هوشمند
+- 🏆 جدول برترین‌ها صفحه‌بندی‌شده
+- 🎭 نقش جایزه برای هر سطح
+- 🔮 پیش‌نمایش نقش بعدی در `/rank`
+
+### 💰 اقتصاد
+- 🪙 جایزه روزانه و هفتگی + کار
+- 🎰 اسلات، بلک‌جک، شیر یا خط
+- 🛒 فروشگاه با خرید نقش
+
+### 🎮 سرگرمی
+- ✊ سنگ کاغذ قیچی تک‌نفره و دوئل دو نفره
+- 🪙 استریک‌فلیپ • 🔢 حدس عدد
+- 🎯 ترویا • 🎱 ۸بال • 😂 میم و جوک
+- 🏷️ تگ سفارشی • 🔢 بازی شمارش گروهی
+
+### 🎵 موزیک | 🎙️ صدا | 📊 لاگ | 🛡️ ضد نابودی | 👋 تعامل | 🛠️ ابزار | ⚙️ تنظیمات
+- 🎶 پخش موزیک با FFmpeg
+- 🔊 Join-to-Create + پنل دکمه‌ای (قفل، مخفی، محدودیت، Claim) + کیک صوتی
+- 📜 لاگ کامل رویدادها
+- 💣 ضد Nuke و ضد Raid
+- 🕐 AFK، یادآور، LFG، کنفشن ناشناس
+- ⚙️ پنل مدیریت ماژول‌ها با یک دستور
+
+## 🚀 راه‌اندازی سریع
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+cp .env.example .env
+# فایل .env را ویرایش کنید: DISCORD_TOKEN و OWNER_IDS
+python main.py
+```
+
+### 🐳 داکر
+
+```bash
+docker build -t aegis-discord-bot .
+docker run --env-file .env -v aegis-data:/app/data aegis-discord-bot
+```
+
+> 💡 برای توسعه `SYNC_GUILD_ID` را تنظیم کنید تا کامندها فوراً ظاهر شوند.
+> ربات را با اسکوپ‌های `bot` و `applications.commands` اینوایت کنید.
+
+---
+
+<a name="english-version"></a>
+
+<div align="center">
+
+# 🛡️ Aegis — Full-Featured Discord Bot
+
+**[نسخه فارسی](#readme)** 🇮🇷 • English Version 🇬🇧
+
+</div>
+
+---
+
+## ✨ Overview
+
+Aegis is a **modular, production-grade** Discord bot built on `discord.py 2.x`
+with 14 complete modules — from moderation and support tickets to economy,
+leveling, music, and interactive games. Everything works through buttons and
+interactive menus.
+
+Slash commands are grouped so the tree stays under Discord's 100-command cap.
+An optional per-guild prefix still works for `ping` / `help`.
+
+## 🧩 Modules
+
+### ⚖️ Moderation
+- 🔨 Ban, kick, mute and warnings with case IDs
+- 📋 Full case history + message purging
+
+### 🤖 AutoMod
+- 🚫 Word and link filtering
+- 🛡️ Automatic anti-spam
+
+### 🎫 Support Tickets
+- 🎫 Beautiful panel with topic menu + quick-open buttons
+- 🔴 Priority system (low to urgent)
+- 🤝 Claim / Lock / Unlock buttons
+- 📄 Automatic transcript to the moderation log
+- ⭐ Star rating after ticket closure
+- 📊 Full statistics via `/ticket stats`
+
+### 🎉 Giveaways
+- 🎁 One-button entry and leave
+- 💾 Survives restarts
+- 👑 Required-role gating
+
+### 📈 Leveling
+- ⭐ Smart automatic XP
+- 🏆 Paginated leaderboards
+- 🎭 Role rewards per level
+- 🔮 Next reward preview in `/rank`
+
+### 💰 Economy
+- 🪙 Daily, weekly rewards + work
+- 🎰 Slots, blackjack, coin flip
+- 🛒 Shop with role purchases
+
+### 🎮 Fun & Games
+- ✊ Rock-paper-scissors solo and duels
+- 🪙 Streak flip • 🔢 Number guessing
+- 🎯 Trivia • 🎱 8-ball • 😂 Memes and jokes
+- 🏷️ Custom tags • 🔢 Community counting
+
+### 🎵 Music | 🎙️ Voice | 📊 Logging | 🛡️ Protection | 👋 Engagement | 🛠️ Utility | ⚙️ Configuration
+- 🎶 Music playback with FFmpeg
+- 🔊 Join-to-Create + button panel (lock, hide, limit, claim) + voice kick
+- 📜 Complete event logging
+- 💣 Anti-nuke and anti-raid
+- 🕐 AFK, reminders, LFG, anonymous confessions
+- ⚙️ Module control panel with one command
+
+## 🚀 Quick Start
 
 ```bash
 python -m venv .venv
@@ -17,90 +171,20 @@ cp .env.example .env
 python main.py
 ```
 
-Or build the included image (FFmpeg is installed for music):
+### 🐳 Docker
 
 ```bash
 docker build -t aegis-discord-bot .
 docker run --env-file .env -v aegis-data:/app/data aegis-discord-bot
 ```
 
-Invite the application with the `bot` and `applications.commands` scopes. The bot
-needs the permissions for the features you enable. For development, set
-`SYNC_GUILD_ID` to a guild ID: commands then appear immediately instead of waiting
-for global command propagation.
+> 💡 Set `SYNC_GUILD_ID` for development so commands appear instantly.
+> Invite the application with the `bot` and `applications.commands` scopes.
 
-## Architecture
+---
 
-```
-bot/
-  __main__.py             validated startup and logging
-  config.py               environment-only secrets and deployment settings
-  database.py             async SQLite/WAL persistence and domain helpers
-  core/
-    bot.py                intents, extension loading, error boundary, prefixes
-    scheduler.py          persistent restart-safe task scheduler
-    extensions.py         cog load order
-  cogs/
-    admin.py              /owner eval, reload, shutdown, blacklist, broadcast
-    configuration.py      /setup wizard plus /config group (language, logs, roles)
-    moderation.py         cases, warnings, timed actions, lock/lockdown
-    automod.py            filters, spam checks, anti-raid, autorole, welcome
-    logging_events.py     message/member/channel/voice/invite audit events
-    utility.py            profiles, polls, reminders, AFK, APIs and sniping
-    tickets.py            private ticket panel and transcript close flow
-    giveaways.py          persistent button giveaways and rerolls
-    leveling.py           cooldown XP, ranks, leaderboards and role rewards
-    economy.py            wallet, rewards, shop, inventory and mini-games
-    fun.py                games, APIs, tags, counting and image captions
-    music.py              voice queue with yt-dlp/FFmpeg controls
-    panel.py              /panel module toggles
-    protection.py         anti-nuke, anti-alt, scam links, permission audit
-    engagement.py         starboard, confessions, LFG, birthdays
-    voice_tools.py        join-to-create temporary voice rooms
-  utils/
-    embeds.py             consistent brand embeds
-    checks.py             hierarchy and user-facing error helpers
-    time.py               safe duration parsing
-    ui.py                 confirmation, pagination and interactive help
-    i18n.py               English / Persian strings from messages.yml
-migrations/001_initial.sql persistent schema
-```
+<div align="center">
 
-### Persistence and scaling
+**MIT License** • Made with ❤️ by [mohammad1390555](https://github.com/mohammad1390555)
 
-All time-based actions are stored in `scheduled_tasks` with UTC ISO timestamps.
-The scheduler claims due work transactionally, so reminders, temporary bans/timeouts
-and giveaways survive restarts and do not execute twice when multiple workers are
-used. SQLite is configured for WAL mode and is suitable for a small deployment.
-The `Database` interface is deliberately isolated so an async PostgreSQL adapter
-can replace it for a sharded deployment without changing cogs.
-
-Guild settings are namespaced JSON with safe defaults. `/config export` and
-`/config import` provide backup/restore without storing secrets. Sensitive commands
-use Discord's built-in default permissions, role hierarchy checks and confirmation
-buttons where appropriate. All responses share a brand colour, timestamp and
-version footer; `/help` uses a category select menu and long lists use pagination.
-
-Disable a feature with `/panel` — matching slash commands and listeners stay quiet
-for that server.
-
-## Operational notes
-
-- Enable **Server Members Intent** and **Message Content Intent** in the Developer
-  Portal; the code requests both because automod, welcome, XP and prefix commands
-  require them.
-- Music also needs FFmpeg installed on the host. Spotify links are resolved by
-  yt-dlp's search fallback; Spotify itself does not provide audio streams.
-- External commands (`weather`, `translate`, `define`, `meme`, etc.) fail softly and
-  never block moderation. Set API keys only in `.env`.
-- `/owner eval` is intentionally expression-only: imports, attribute access, calls and
-  arbitrary `exec` are blocked. Keep `OWNER_IDS` tightly controlled.
-- Never commit `.env`, database files or bot tokens. See `.env.example`.
-- Persian UI strings live in `config/messages.yml` under `fa`. Set `/config language`.
-
-## Tests
-
-```bash
-python -m pip install -r requirements.txt pytest pytest-asyncio
-python -m pytest
-```
+</div>
