@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Async SQLite persistence used by all cogs.
 
 The class deliberately exposes small domain helpers instead of leaking SQL into

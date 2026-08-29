@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Voice tools with Join-to-Create and a full button control panel for temp channels."""
 
 from __future__ import annotations

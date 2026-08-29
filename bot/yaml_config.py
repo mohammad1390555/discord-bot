@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Load config/config.yml and config/messages.yml."""
 from __future__ import annotations
 

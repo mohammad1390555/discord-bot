@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Full button-driven ticket system for Aegis.
 
 Features

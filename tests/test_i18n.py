@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 from __future__ import annotations
 
 from types import SimpleNamespace

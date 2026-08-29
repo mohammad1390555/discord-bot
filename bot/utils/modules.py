@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Per-guild feature flags from /panel, falling back to config.yml defaults."""
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Run Aegis from the repository root: python main.py"""
 from __future__ import annotations
 

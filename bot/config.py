@@ -1,3 +1,4 @@
+# ─── Made by Mohammad — github.com/mohammad1390555 ───
 """Environment secrets plus YAML defaults from config/."""
 from __future__ import annotations
 
