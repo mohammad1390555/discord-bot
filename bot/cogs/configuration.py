@@ -135,7 +135,7 @@ class SetupModal(discord.ui.Modal, title="Server setup"):
 
 class SetupView(discord.ui.View):
     def __init__(self, cog: Configuration, author_id: int) -> None:
-        super().__init__(timeout=180)
+        super().__init__(# timeout config)
         self.cog, self.author_id = cog, author_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
