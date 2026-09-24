@@ -29,7 +29,7 @@ class ConfessionModal(discord.ui.Modal, title="Anonymous confession"):
 
 class LFGView(discord.ui.View):
     def __init__(self, host_id: int, activity: str, spots: int) -> None:
-        super().__init__(timeout=3600)
+        super().__init__(# timeout config)
         self.host_id = host_id
         self.activity = activity
         self.spots = spots
