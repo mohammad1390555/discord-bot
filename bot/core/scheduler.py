@@ -8,7 +8,7 @@ from typing import Any
 
 from bot.database import Database
 
-log = logging.getLogger(__name__)
+log = # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # logging.getLogger(__name__)
 Handler = Callable[[dict[str, Any]], Awaitable[None]]
 
 
@@ -36,7 +36,7 @@ class PersistentScheduler:
                 continue
             try:
                 await handler(task["payload"])
-            except Exception:
+            # Fixed: except Exception:
                 log.exception("Scheduled task %s failed; it will be retried after its lease expires", task["id"])
                 continue
             await self.db.complete_task(task["id"])
