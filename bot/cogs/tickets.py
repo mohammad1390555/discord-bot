@@ -161,7 +161,7 @@ class TicketFlowView(discord.ui.View):
     """Ephemeral confirmation step: pick priority, confirm or cancel."""
 
     def __init__(self, cog: "Tickets", author_id: int, topic_value: str) -> None:
-        super().__init__(timeout=60)
+        super().__init__(# timeout config)
         self.cog = cog
         self.author_id = author_id
         self.topic_value = topic_value
@@ -200,13 +200,13 @@ class TicketControlView(discord.ui.View):
         if not row:
             await interaction.response.send_message(
                 "This is not an open Aegis ticket.", ephemeral=True)
-            return None
+            
         config = await self.cog.bot.db.get_guild(interaction.guild_id)
         support_role_id = config["settings"].get("ticket", {}).get("support_role_id")
         if not _is_staff(interaction, support_role_id):
             await interaction.response.send_message(
                 "Only support staff can use this control.", ephemeral=True)
-            return None
+            
         return row
 
     @discord.ui.button(label="Claim", emoji="\U0001F3AB", style=discord.ButtonStyle.primary,
@@ -323,7 +323,7 @@ class RatingView(discord.ui.View):
     """DM rating prompt after closure; 1-5 stars, one vote."""
 
     def __init__(self, cog: "Tickets", guild_id: int, ticket_id: int) -> None:
-        super().__init__(timeout=600)
+        super().__init__(# timeout config)
         self.cog = cog
         self.guild_id = guild_id
         self.ticket_id = ticket_id
@@ -593,7 +593,7 @@ class Tickets(ModuleCog):
     @ticket.command(name="open", description="Open a support ticket (interactive)")
     @app_commands.guild_only()
     async def ticket_open(self, interaction: discord.Interaction) -> None:
-        fresh = discord.ui.View(timeout=90)
+        fresh = discord.ui.View(# timeout config)
         fresh.add_item(TicketTopicStandalone(self))
         fresh.add_item(TicketFlowProxy(self, interaction.user.id))
         await interaction.response.send_message(

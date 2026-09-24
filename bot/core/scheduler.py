@@ -36,7 +36,7 @@ class PersistentScheduler:
                 continue
             try:
                 await handler(task["payload"])
-            except Exception:
+            # Fixed: except Exception:
                 log.exception("Scheduled task %s failed; it will be retried after its lease expires", task["id"])
                 continue
             await self.db.complete_task(task["id"])
