@@ -121,7 +121,6 @@ class AegisBot(commands.Bot):
                 await self.load_extension(extension)
             except Exception:
                 log.exception("Unable to load extension %s", extension)
-                raise
         self.scheduler.start()
         # Sync globally by default. Set SYNC_GUILD_ID for fast development sync.
         if not self.settings.get("bot.sync_on_start", True):

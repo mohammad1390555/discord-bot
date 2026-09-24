@@ -156,3 +156,24 @@ CREATE TABLE IF NOT EXISTS temp_voice (
     owner_id INTEGER NOT NULL,
     created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS shop_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    item_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    price INTEGER NOT NULL,
+    role_id INTEGER,
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(guild_id, item_id)
+);
+
+CREATE TABLE IF NOT EXISTS inventory (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    guild_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    item_id TEXT NOT NULL,
+    purchased_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(guild_id, user_id, item_id)
+);
