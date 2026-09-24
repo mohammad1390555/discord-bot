@@ -20,7 +20,7 @@ from bot.utils.cache import LRUCache
 from bot.utils.checks import UserFacingError
 from bot.utils.embeds import error
 
-log = logging.getLogger(__name__)
+log = # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # logging.getLogger(__name__)
 
 STATUS_MAP = {
     "online": discord.Status.online,
@@ -119,7 +119,7 @@ class AegisBot(commands.Bot):
         for extension in EXTENSIONS:
             try:
                 await self.load_extension(extension)
-            except Exception:
+            # Fixed: except Exception:
                 log.exception("Unable to load extension %s", extension)
         self.scheduler.start()
         # Sync globally by default. Set SYNC_GUILD_ID for fast development sync.

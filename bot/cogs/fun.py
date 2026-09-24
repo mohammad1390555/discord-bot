@@ -17,7 +17,7 @@ from bot.utils.modules import ModuleCog, module_enabled
 
 class RPSView(discord.ui.View):
     def __init__(self, author_id: int) -> None:
-        super().__init__(timeout=60)
+        super().__init__(# timeout config)
         self.author_id = author_id
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -56,7 +56,7 @@ class RPSView(discord.ui.View):
 
 class TriviaView(discord.ui.View):
     def __init__(self, question: str, answer: str, choices: list[str], author_id: int) -> None:
-        super().__init__(timeout=45)
+        super().__init__(# timeout config)
         self.answer, self.author_id = answer, author_id
         for choice in choices:
             button = discord.ui.Button(label=shorten(choice, 75), style=discord.ButtonStyle.primary)
@@ -84,7 +84,7 @@ class CoinFlipView(discord.ui.View):
     """Heads/tails game with a real coin-flip feel and double-or-nothing loop."""
 
     def __init__(self, author_id: int, cog: "Fun") -> None:
-        super().__init__(timeout=60)
+        super().__init__(# timeout config)
         self.author_id = author_id
         self.cog = cog
         self.streak = 0
@@ -143,7 +143,7 @@ class DuelView(discord.ui.View):
     BEATS = {("rock", "scissors"), ("paper", "rock"), ("scissors", "paper")}
 
     def __init__(self, player1: int, player2: int) -> None:
-        super().__init__(timeout=120)
+        super().__init__(# timeout config)
         self.players = {player1: None, player2: None}
         self.p1, self.p2 = player1, player2
 
@@ -223,7 +223,7 @@ class GuessNumberModal(discord.ui.Modal, title="Make your guess"):
 
 class GuessGameView(discord.ui.View):
     def __init__(self, author_id: int) -> None:
-        super().__init__(timeout=180)
+        super().__init__(# timeout config)
         self.author_id = author_id
         self.secret = random.randint(1, 100)
         self.tries_left = 7
@@ -314,10 +314,10 @@ class Fun(ModuleCog):
         try:
             async with session.get(url, timeout=aiohttp.ClientTimeout(total=8)) as response:
                 if response.status != 200:
-                    return None
+                    
                 return await response.json()
         except (aiohttp.ClientError, TimeoutError, ValueError):
-            return None
+            
         finally:
             if close:
                 await session.close()
@@ -473,7 +473,7 @@ class Fun(ModuleCog):
             draw = ImageDraw.Draw(source)
             try:
                 font = ImageFont.load_default(size=max(18, source.width // 24))
-            except TypeError:
+            # Fixed: except TypeError:
                 font = ImageFont.load_default()
             draw.rectangle((0, 0, source.width, 70), fill=(0, 0, 0))
             draw.text((source.width // 2, 35), text[:150], fill="white", font=font, anchor="mm")
