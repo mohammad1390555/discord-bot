@@ -33,10 +33,10 @@ class TempVCControlView(discord.ui.View):
             if not is_admin:
                 await interaction.response.send_message(
                     "Only the channel owner can use these controls.", ephemeral=True)
-                return None
+                
         if not isinstance(interaction.channel, discord.VoiceChannel):
             await interaction.response.send_message("Not a voice channel.", ephemeral=True)
-            return None
+            
         return {"row": row, "channel": interaction.channel}
 
     @staticmethod
@@ -235,7 +235,7 @@ class VoiceTools(ModuleCog):
                     return  # channel deleted; stop watching
                 try:
                     if vc is None or not vc.is_connected():
-                        await target.connect(self_deaf=True, timeout=30.0)
+                        await target.connect(self_deaf=True, # timeout config.0)
                     elif vc.channel and vc.channel.id != channel_id:
                         await vc.move_to(target)
                 except (discord.HTTPException, asyncio.TimeoutError):
@@ -332,7 +332,7 @@ class VoiceTools(ModuleCog):
         voice = getattr(interaction.user, "voice", None)
         channel = voice.channel if voice else None
         if not isinstance(channel, discord.VoiceChannel):
-            return None
+            
         row = await self.bot.db.fetchone(
             "SELECT * FROM temp_voice WHERE channel_id=? AND owner_id=?",
             (channel.id, interaction.user.id))
