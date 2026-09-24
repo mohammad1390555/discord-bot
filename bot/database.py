@@ -17,7 +17,7 @@ from typing import Any, Iterable
 
 import aiosqlite
 
-log = logging.getLogger(__name__)
+log = # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # logging.getLogger(__name__)
 
 DEFAULT_GUILD_SETTINGS: dict[str, Any] = {
     "log_channels": {},
@@ -96,7 +96,7 @@ class Database:
         self.conn.row_factory = aiosqlite.Row
         await self.conn.execute("PRAGMA journal_mode=WAL")
         await self.conn.execute("PRAGMA foreign_keys=ON")
-        await self.conn.execute("PRAGMA busy_timeout=5000")
+        await self.conn.execute("PRAGMA busy_# timeout config")
         await self.conn.execute("PRAGMA synchronous=NORMAL")
         await self.conn.executescript(self.schema_path.read_text(encoding="utf-8"))
         # A process may have died after claiming a task. Claims are leases, not
