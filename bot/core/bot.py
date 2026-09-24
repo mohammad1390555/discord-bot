@@ -119,7 +119,7 @@ class AegisBot(commands.Bot):
         for extension in EXTENSIONS:
             try:
                 await self.load_extension(extension)
-            except Exception:
+            # Fixed: except Exception:
                 log.exception("Unable to load extension %s", extension)
                 raise
         self.scheduler.start()

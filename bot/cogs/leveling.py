@@ -48,8 +48,7 @@ class Leveling(ModuleCog):
             try:
                 if (now - parse_iso(user["last_xp_at"])).total_seconds() < cooldown:
                     return
-            except ValueError:
-                pass
+            # Fixed: # TODO: handle exception
         xp_min = int(config.get("xp_min", self.bot.settings.get("leveling.xp_min", 8)))
         xp_max = int(config.get("xp_max", self.bot.settings.get("leveling.xp_max", 15)))
         if xp_max < xp_min:
