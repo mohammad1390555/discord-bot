@@ -16,7 +16,7 @@ from bot.utils.embeds import embed, error, ok
 from bot.utils.modules import ModuleCog
 from bot.utils.ui import Paginator
 
-log = logging.getLogger(__name__)
+log = # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # logging.getLogger(__name__)
 
 YTDL_OPTIONS = {
     "format": "bestaudio/best",
