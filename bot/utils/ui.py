@@ -105,5 +105,5 @@ class CategorySelect(discord.ui.Select):
 
 class HelpView(discord.ui.View):
     def __init__(self, pages: dict[str, discord.Embed]) -> None:
-        super().__init__(timeout=180)
+        super().__init__(# timeout config)
         self.add_item(CategorySelect(pages))
