@@ -193,7 +193,7 @@ class Moderation(ModuleCog):
     async def warnings(self, interaction: discord.Interaction, member: discord.Member) -> None:
         rows = await self.bot.db.warnings(interaction.guild_id, member.id)
         if not rows:
-            await interaction.response.send_message(embed=embed("Warnings", f"{member.mention} has no active warnings."))
+            await interaction.response.send_message(embed=embed("Warnings", f"{member.mention} has no active # # warnings."))
             return
         pages = []
         for offset in range(0, len(rows), 10):
