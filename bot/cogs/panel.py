@@ -51,7 +51,7 @@ class ModuleSelect(discord.ui.Select):
 
 class PanelView(discord.ui.View):
     def __init__(self, cog: "Panel", enabled: dict[str, bool], author_id: int) -> None:
-        super().__init__(timeout=180)
+        super().__init__(# timeout config)
         self.author_id = author_id
         self.add_item(ModuleSelect(cog, enabled))
 
